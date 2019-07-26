@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-
 import routes from './routes';
 
 Vue.use(VueRouter);
@@ -20,6 +19,16 @@ export default function (/* { store, ssrContext } */) {
     // quasar.conf.js -> build -> publicPath
     mode: process.env.VUE_ROUTER_MODE,
     base: process.env.VUE_ROUTER_BASE,
+  });
+
+  Router.beforeEach((to, from, next) => {
+    if (to.matched.some(record => record.meta.requiresAuth)
+      && (!Router.app.$store.getters['competency/isLogined']
+          || !Router.app.isValidJwt(Router.app.$store.getters['competency/token']))) {
+      next({ path: '/login', query: { redirect: to.fullPath } });
+    } else {
+      next();
+    }
   });
 
   return Router;

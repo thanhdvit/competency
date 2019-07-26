@@ -45,13 +45,14 @@
         :rows-per-page-options="[0]"
         :pagination.sync="pagination"
         separator="cell"
+        hide-bottom
       >
         <template v-slot:top-left>
-          <span class="table-header">XÂY DỰNG KHUNG NĂNG LỰC</span>
+          <span class="table-top-left">XÂY DỰNG KHUNG NĂNG LỰC</span>
           <div class="org-name">{{ orgName }}</div>
         </template>
 
-        <!-- Search -->
+        <!-- SEARCH -->
         <template v-slot:top-right>
           <q-input borderless dense debounce="300" v-model="filter" placeholder="Search">
             <template v-slot:append>
@@ -60,15 +61,17 @@
           </q-input>
         </template>
 
-        <!-- Header -->
-        <q-tr slot="header" class="bg-grey-7 text-white">
+        <!-- HEADER -->
+        <q-tr slot="header" class="table-header">
           <q-td v-for="col in columns" :key="col.name">
             <span v-if="col.field !== 'cdcv'">{{ col.label }}</span>
-            <a target="_blank"
-:href="`/#/standard/${col.jobID}/${orgID}/${encodeURI(col.label)}/${encodeURI(orgName)}`"
-              v-if="col.field === 'cdcv'" class="job-title">
-              {{ col.label }}
-            </a>
+            <q-item clickable flat tag="a" class="job-title"
+              v-if="col.field === 'cdcv'"
+              :to="`/standard/${col.jobID}/${orgID}/${encodeURI(col.label)}/${encodeURI(orgName)}`">
+              <q-item-section>
+                <q-item-label>{{ col.label }}</q-item-label>
+              </q-item-section>
+            </q-item>
           </q-td>
         </q-tr>
 
@@ -122,9 +125,6 @@
 </template>
 
 <script>
-// import Vue from 'vue';
-import axios from 'axios';
-
 export default {
   name: 'KhungNangluc',
   data() {
@@ -153,7 +153,7 @@ export default {
   async created() {
     try {
       // Danh sách công ty
-      const response = await axios.get(`${this.$webapiPath}/hr/legals`);
+      const response = await this.$axios.get(`${this.$webapiPath}/hr/legals`);
       response.data.myData.forEach((item) => {
         this.dmCongty.push({ label: item.legalName, value: item.legalID });
       });
@@ -238,7 +238,7 @@ export default {
       bodyFormData.set('orgID', framework.$this.orgID);
       bodyFormData.set('framework', JSON.stringify(framework[`${jobID}-${framework.$this.orgID}`]));
 
-      await axios.post(`${framework.$this.$webapiPath}/competency/framework/update`, bodyFormData)
+      await this.$axios.post(`${framework.$this.$webapiPath}/competency/framework/update`, bodyFormData)
         .then((response) => {
           if (response.data.status === 200) {
             framework.$this.refreshCheckboxUI[`${jobID}-${competencyCode}`] = false;
@@ -278,7 +278,7 @@ export default {
         });
 
         // Danh sách chức danh công việc
-        let response = await axios.get(`${this.$webapiPath}/competency/job-title?orgID=${this.orgID}`);
+        let response = await this.$axios.get(`${this.$webapiPath}/competency/job-title?orgID=${this.orgID}`);
         response.data.myData.forEach((item) => {
           this.columns.push({
             name: `${item.jobID}`,
@@ -292,7 +292,7 @@ export default {
         this.orgName = `${response.data.orgName}`;
 
         // Từ điển năng lực
-        response = await axios.get(`${this.$webapiPath}/competency/list`);
+        response = await this.$axios.get(`${this.$webapiPath}/competency/list`);
         let rowIndex = 0;
         let nangluc;
         response.data.myData.forEach((item) => {
@@ -307,28 +307,32 @@ export default {
         });
 
         // Từ điển năng lực - chuyên môn
-        response = await axios.get(`${this.$webapiPath}/competency/list/chuyenmon?orgID=${this.orgID}`);
+        response = await this.$axios.get(`${this.$webapiPath}/competency/list/chuyenmon?orgID=${this.orgID}`);
         rowIndex = 1;
-        response.data.myData.forEach((item) => {
-          this.data.push({
-            stt: rowIndex,
-            id: `${item.competencyID}`,
-            ma: `${item.competencyCode}`,
-            nl: `${item.competency}`,
+        if (response.data.myData) {
+          response.data.myData.forEach((item) => {
+            this.data.push({
+              stt: rowIndex,
+              id: `${item.competencyID}`,
+              ma: `${item.competencyCode}`,
+              nl: `${item.competency}`,
+            });
+            rowIndex += 1;
           });
-          rowIndex += 1;
-        });
+        }
 
         // Dữ liệu khung năng lực của phòng ban
-        response = await axios.get(`${this.$webapiPath}/competency/framework/list?orgID=${this.orgID}`);
-        response.data.myData.forEach((item) => {
-          Object.keys(item).forEach((key) => {
-            const compentencyObj = JSON.parse(item[key]);
-            Object.keys(compentencyObj).forEach((key1) => {
-              this.framework[key][key1] = compentencyObj[key1];
+        response = await this.$axios.get(`${this.$webapiPath}/competency/framework/list?orgID=${this.orgID}`);
+        if (response.data.myData) {
+          response.data.myData.forEach((item) => {
+            Object.keys(item).forEach((key) => {
+              const compentencyObj = JSON.parse(item[key]);
+              Object.keys(compentencyObj).forEach((key1) => {
+                this.framework[key][key1] = compentencyObj[key1];
+              });
             });
           });
-        });
+        }
       } catch (err) {
         this.columns = [];
         this.orgName = this.selectedDepartment.label;
@@ -340,6 +344,7 @@ export default {
           timeout: 1000,
           icon: 'warning',
         });
+        console.log(err);
       } finally {
         this.loading = false;
       }
@@ -349,7 +354,7 @@ export default {
         const legalCode = this.selectedLegal.label.substring(0, 3);
 
         // Danh sách phòng ban, chi nhánh, phân xưởng, ...
-        const response = await axios.get(`${this.$webapiPath}/hr/departments?legalCode=${legalCode}`);
+        const response = await this.$axios.get(`${this.$webapiPath}/hr/departments?legalCode=${legalCode}`);
         this.dmPhongban = [];
         response.data.myData.forEach((item) => {
           this.dmPhongban.push({ label: item.orgName, value: item.orgID });
@@ -362,21 +367,18 @@ export default {
 };
 </script>
 
-<style>
+<style scope>
 .q-table td, .q-table th {
   white-space: normal !important;
 }
 
-.table-header {
-  font-weight: bold;
-}
 .org-name {
-  font-size: 1.6em;
+  font-size: 1.2em;
   font-weight: bold;
 }
 .job-title {
-  font-size: 1em;
-  color: white;
+  font-size: 1em !important;
+  color: #6cf5c5 !important;
 }
 
 .row-lv1 {

@@ -15,11 +15,14 @@
     "@progress/kendo-theme-default": "^4.0.0",
     "@progress/kendo-ui": "^2019.2.710",
     "@quasar/extras": "^1.0.0",
+    "apexcharts": "^3.8.3",
     "axios": "^0.18.1",
     "primeicons": "^1.0.0",
     "primevue": "^1.0.0-beta.4",
-    "quasar": "^1.0.0",
-    "vue-i18n": "^8.0.0"
+    "quasar": "^1.0.5",
+    "vue-apexcharts": "^1.4.0",
+    "vue-i18n": "^8.0.0",
+    "vuex-persistedstate": "^2.5.4"
   },
   "devDependencies": {
     "@quasar/app": "^1.0.0",

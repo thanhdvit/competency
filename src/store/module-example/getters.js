@@ -1,2 +1,6 @@
-export function someGetter(/* state */) {
+export function isLogined(state) {
+  return state.isAuthenticated;
+}
+export function token(state) {
+  return state.token;
 }

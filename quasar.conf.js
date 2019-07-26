@@ -8,7 +8,7 @@ module.exports = function (ctx) {
     boot: [
       'i18n',
       'axios',
-      'global'
+      'global',
     ],
 
     css: [
@@ -34,6 +34,10 @@ module.exports = function (ctx) {
       // all: true, // --- includes everything; for dev only!
 
       components: [
+        'QAvatar',
+        'QCard',
+        'QCardSection',
+        `QCardActions`,
         'QLayout',
         'QHeader',
         'QDrawer',

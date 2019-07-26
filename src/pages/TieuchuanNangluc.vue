@@ -15,7 +15,7 @@
       >
 
       <template v-slot:top-left>
-        <span class="table-header">Tiêu chuẩn năng lực</span>
+        <span class="table-top-left">Tiêu chuẩn năng lực</span>
         <div class="job-title">{{ jobName }} - {{ orgName }}</div>
       </template>
 
@@ -106,7 +106,7 @@
         </q-td>
       </q-tr>
 
-      <!-- footer -->
+      <!-- FOOTER -->
       <template v-slot:bottom-row>
         <q-tr class="bg-grey-4">
           <q-td colspan="3" style="font-size: 16px">
@@ -122,13 +122,10 @@
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
   name: 'TieuchuanNangluc',
   data() {
     return {
-      shape: '',
       openModal: false,
       data: [],
       filter: '',
@@ -155,22 +152,26 @@ export default {
 
     try {
       // Từ điển năng lực
-      let response = await axios.get(`${this.$webapiPath}/competency/list`);
+      let response = await this.$axios.get(`${this.$webapiPath}/competency/list`);
       const tudienNangluc = {};
       response.data.myData.forEach((item) => {
         tudienNangluc[`${item.competencyCode}`] = `${item.competency}`;
       });
 
       // Từ điển năng lực - chuyên môn
-      response = await axios.get(`${this.$webapiPath}/competency/list/chuyenmon?orgID=${this.orgID}`);
+      response = await this.$axios.get(`${this.$webapiPath}/competency/list/chuyenmon?orgID=${this.orgID}`);
       const tudienNanglucChuyenmon = [];
       response.data.myData.forEach((item) => {
         tudienNanglucChuyenmon[`${item.competencyCode}`] = `${item.competency}`;
       });
 
+      // Lấy dữ liệu tiêu chuẩn năng lực
+      response = await this.$axios.get(`${this.$webapiPath}/competency/framework/tieuchuan-nangluc?orgID=${this.orgID}&jobID=${this.jobID}`);
+      this.serverData = JSON.parse(response.data.tieuchuanNangluc);
+
       // Dữ liệu khung năng lực của phòng ban
       let trongso;
-      response = await axios.get(`${this.$webapiPath}/competency/framework/list?orgID=${this.orgID}&jobID=${this.jobID}`);
+      response = await this.$axios.get(`${this.$webapiPath}/competency/framework/list?orgID=${this.orgID}&jobID=${this.jobID}`);
       response.data.myData.forEach((item) => {
         Object.keys(item).forEach((key) => {
           const compentencyObj = JSON.parse(item[key]);
@@ -184,6 +185,7 @@ export default {
               });
             }
             if (Number.isInteger(trongso) && key1.length === 1) {
+              this.serverData[key1] = trongso;
               this.sumTrongso += trongso;
             }
           });
@@ -202,10 +204,6 @@ export default {
         rowIndex = (item.ma.length === 1) ? 0 : rowIndex + 1;
         item.stt = (rowIndex === 0) ? '' : rowIndex;
       });
-
-      // Lấy dữ liệu tiêu chuẩn năng lực
-      response = await axios.get(`${this.$webapiPath}/competency/framework/tieuchuan-nangluc?orgID=${this.orgID}&jobID=${this.jobID}`);
-      this.serverData = JSON.parse(response.data.tieuchuanNangluc);
 
       this.openModal = false;
     } catch (err) {
@@ -230,7 +228,7 @@ export default {
       bodyFormData.set('orgID', this.orgID);
       bodyFormData.set('tieuchuanNangluc', JSON.stringify(this.serverData));
 
-      axios.post(`${this.$webapiPath}/competency/framework/tieuchuan-nangluc/update`, bodyFormData)
+      this.$axios.post(`${this.$webapiPath}/competency/framework/tieuchuan-nangluc/update`, bodyFormData)
         .then((response) => {
           if (response.data.status === 200) {
             this.openModal = false;
@@ -244,7 +242,7 @@ export default {
 };
 </script>
 
-<style>
+<style scope>
 .q-table td, .q-table th {
   white-space: normal !important;
 }

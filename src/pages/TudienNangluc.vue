@@ -50,9 +50,6 @@
 </template>
 
 <script>
-// import Vue from 'vue';
-import axios from 'axios';
-
 export default {
   name: 'TudienNangluc',
   data() {
@@ -82,7 +79,7 @@ export default {
     };
   },
   created() {
-    axios.get('http://localhost:10543/webapi/competency/list')
+    this.$axios.get(`${this.$webapiPath}/competency/list`)
       .then((response) => {
         let rowIndex = 0;
         response.data.myData.forEach((item) => {

@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-
-// import example from './module-example'
+import createPersistedState from 'vuex-persistedstate';
+import competency from './module-example';
 
 Vue.use(Vuex);
 
@@ -12,8 +12,9 @@ Vue.use(Vuex);
 
 export default function (/* { ssrContext } */) {
   const Store = new Vuex.Store({
+    plugins: [createPersistedState()],
     modules: {
-      // example
+      competency,
     },
 
     // enable strict mode (adds overhead!)
