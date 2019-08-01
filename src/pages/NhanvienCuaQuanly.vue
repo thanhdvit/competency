@@ -127,17 +127,19 @@ export default {
       this.columns.push({ name: 'phongban', label: 'PHÒNG BAN', field: 'phongban' });
       this.columns.push({ name: 'danhgia', label: 'ĐÁNH GIÁ', field: 'danhgia' });
 
-      pData.myData.forEach((item, stt) => {
-        this.data.push({
-          stt: stt + 1,
-          id: `${item.employeeID}`,
-          manv: `${item.employeeCode}`,
-          fullname: `${item.fullname}`,
-          cdcv: `${item.jobTitle}`,
-          phongban: `${item.department}`,
-          danhgia: `${item.who}`,
+      if (pData.myData !== null) {
+        pData.myData.forEach((item, stt) => {
+          this.data.push({
+            stt: stt + 1,
+            id: `${item.employeeID}`,
+            manv: `${item.employeeCode}`,
+            fullname: `${item.fullname}`,
+            cdcv: `${item.jobTitle}`,
+            phongban: `${item.department}`,
+            danhgia: `${item.who}`,
+          });
         });
-      });
+      }
     },
     deleteEstimation(employeeID, employeeName) {
       this.confirm = true;

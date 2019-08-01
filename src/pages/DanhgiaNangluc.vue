@@ -70,17 +70,20 @@
             {{ props.row.data.md * props.row.data.tc }}
           </span>
         </q-td>
+
         <!-- Quản lý đánh giá -->
         <q-td class="text-center">
           <span v-if="props.row.key.length === 1">
             {{ diemQuanly[props.row.key] }}
           </span>
           <span v-if="props.row.key.length > 1"
-            :class="(capDanhgia === 'QL' && estimatePeriod === 'CURRENT') ? 'cursor-pointer' : ''"
+            :class="(capDanhgia === 'QL' && isQuanly === true && estimatePeriod === 'CURRENT')
+            ? 'cursor-pointer'
+            : ''"
             style="color: blue">
             {{ props.row.data.qldg }}
             <q-popup-edit v-model="props.row.data.qldg" buttons
-              v-if="capDanhgia === 'QL' && estimatePeriod === 'CURRENT'"
+              v-if="capDanhgia === 'QL' && isQuanly === true && estimatePeriod === 'CURRENT'"
               label-set="OK"
               @save="updateDiemQuanly">
               <div class="text-weight-bold">
@@ -99,17 +102,20 @@
             </q-popup-edit>
           </span>
         </q-td>
+
         <!-- Hội đồng đánh giá -->
         <q-td class="text-center">
           <span v-if="props.row.key.length === 1">
             {{ diemHoidong[props.row.key] }}
           </span>
           <span v-if="props.row.key.length > 1"
-            :class="(capDanhgia === 'HD' && estimatePeriod === 'CURRENT') ? 'cursor-pointer' : ''"
+            :class="(capDanhgia === 'HD' && isHoidong === true && estimatePeriod === 'CURRENT')
+              ? 'cursor-pointer'
+              : ''"
             style="color: orange">
             {{ props.row.data.hddg }}
             <q-popup-edit v-model="props.row.data.hddg" buttons
-              v-if="capDanhgia === 'HD' && estimatePeriod === 'CURRENT'"
+              v-if="capDanhgia === 'HD' && isHoidong === true && estimatePeriod === 'CURRENT'"
               label-set="OK"
               @save="updateDiemHoidong">
               <div class="text-weight-bold">
@@ -171,12 +177,16 @@
         </q-tr>
       </template>
     </q-table>
-    <div class="text-right" style="margin-top: 5px" v-if="estimatePeriod === 'CURRENT'">
+
+    <!-- LƯU DỮ LIỆU -->
+    <div class="text-right" style="margin-top: 5px"
+      v-if="isSaveAllowed">
       <q-btn color="teal" icon="memory" label="Lưu tạm"
         @click="luutam" />
       <q-btn color="indigo" icon="save" label="Hoàn tất" style="margin-left: 20px"
         @click="hoantat" />
     </div>
+
     <div id="chart" style="margin-top: 10px">
       <apexchart type=radar :options="chartOptions" :series="series"
         v-show="ketquaCuoicung > 0" />
@@ -225,6 +235,8 @@ export default {
       ketquaDanhgiaHD: 0,
       ketquaCuoicung: 0,
       capDanhgia: '',
+      isHoidong: false,
+      isQuanly: false,
       orgID: -1,
       jobID: -1,
       estimatePeriod: 'CURRENT',
@@ -251,6 +263,8 @@ export default {
         this.notify('Không tìm thấy nhân viên', 'red', 'infor', 'white');
         return;
       }
+      // Kiểm tra xem người đánh giá có phải là quản lý
+      this.isQuanly = (estimateResponse.data.myData.managerID === this.$store.getters['competency/userID']);
 
       this.orgID = estimateResponse.data.myData.orgID;
       this.jobID = estimateResponse.data.myData.jobID;
@@ -280,6 +294,19 @@ export default {
         });
       }
 
+      // Kiểm tra xem người đánh giá có phải là hội đồng
+      response = await this.$axios.get(`${this.$webapiPath}/competency/role/hoidong/get?userID=${this.$store.getters['competency/userID']}`);
+      if (response.data.myData) {
+        response.data.myData.forEach((item) => {
+          this.isHoidong = item.dsNhanvien1.includes(`,${this.estimateID},`);
+        });
+      }
+
+      // Nếu không phải là quản lý và cũng không phải hội đồng
+      if (this.isQuanly === false && this.isHoidong === false) {
+        return;
+      }
+
       await this.newDanhgia(tudienNangluc, tudienNanglucChuyenmon);
       if (estimateResponse.data.myData.data !== '{}') {
         this.loadDanhgia(JSON.parse(estimateResponse.data.myData.data),
@@ -297,8 +324,20 @@ export default {
         timeout: 1000,
         icon: 'warning',
       });
-      console.log(err);
     }
+  },
+  computed: {
+    isSaveAllowed() {
+      if (this.capDanhgia === 'QL' && this.isQuanly === true && this.estimatePeriod === 'CURRENT') {
+        return true;
+      }
+
+      if (this.capDanhgia === 'HD' && this.isHoidong === true && this.estimatePeriod === 'CURRENT') {
+        return true;
+      }
+
+      return false;
+    },
   },
   methods: {
     async newDanhgia(tudienNangluc, tudienNanglucChuyenmon) {
@@ -394,7 +433,10 @@ export default {
 
       this.ketquaDanhgiaQL = 0;
       this.ketquaDanhgiaQL = (+this.diemQuanly.A * +this.sumTrongso.A) / +this.sumDiemchuan.A;
-      this.ketquaDanhgiaQL += (+this.diemQuanly.B * +this.sumTrongso.B) / +this.sumDiemchuan.B;
+      // nếu không có năng lực B (năng lực quản lý)
+      if (this.sumDiemchuan.B > 0) {
+        this.ketquaDanhgiaQL += (+this.diemQuanly.B * +this.sumTrongso.B) / +this.sumDiemchuan.B;
+      }
       this.ketquaDanhgiaQL += (+this.diemQuanly.C * +this.sumTrongso.C) / +this.sumDiemchuan.C;
       this.ketquaDanhgiaQL += (+this.diemQuanly.D * +this.sumTrongso.D) / +this.sumDiemchuan.D;
       this.ketquaDanhgiaQL = Math.round(this.ketquaDanhgiaQL, 2);
@@ -608,7 +650,7 @@ export default {
 };
 </script>
 
-<style slot-scope>
+<style scoped>
 .q-table td, .q-table th {
   white-space: normal !important;
 }

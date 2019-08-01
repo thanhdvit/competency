@@ -279,16 +279,18 @@ export default {
 
         // Danh sách chức danh công việc
         let response = await this.$axios.get(`${this.$webapiPath}/competency/job-title?orgID=${this.orgID}`);
-        response.data.myData.forEach((item) => {
-          this.columns.push({
-            name: `${item.jobID}`,
-            align: 'center',
-            label: `${item.jobTitle}`,
-            field: 'cdcv',
-            jobID: `${item.jobID}`,
+        if (response.data.myData !== null) {
+          response.data.myData.forEach((item) => {
+            this.columns.push({
+              name: `${item.jobID}`,
+              align: 'center',
+              label: `${item.jobTitle}`,
+              field: 'cdcv',
+              jobID: `${item.jobID}`,
+            });
+            this.framework[`${item.jobID}-${this.orgID}`] = {};
           });
-          this.framework[`${item.jobID}-${this.orgID}`] = {};
-        });
+        }
         this.orgName = `${response.data.orgName}`;
 
         // Từ điển năng lực
@@ -367,7 +369,7 @@ export default {
 };
 </script>
 
-<style scope>
+<style scoped>
 .q-table td, .q-table th {
   white-space: normal !important;
 }

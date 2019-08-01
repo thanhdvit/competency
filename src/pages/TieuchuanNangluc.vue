@@ -242,7 +242,7 @@ export default {
 };
 </script>
 
-<style scope>
+<style scoped>
 .q-table td, .q-table th {
   white-space: normal !important;
 }
@@ -260,7 +260,7 @@ export default {
 }
 </style>
 
-<style lang="stylus">
+<style scoped lang="stylus">
 .my-sticky-header-table
   /* max height is important */
   .q-table__middle
