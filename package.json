@@ -15,7 +15,7 @@
     "@progress/kendo-theme-default": "^4.0.0",
     "@progress/kendo-ui": "^2019.2.710",
     "@quasar/extras": "^1.0.0",
-    "apexcharts": "^3.8.3",
+    "apexcharts": "^3.24.0",
     "axios": "^0.18.1",
     "primeicons": "^1.0.0",
     "primevue": "^1.0.0-beta.4",
